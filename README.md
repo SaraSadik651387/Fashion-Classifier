@@ -18,6 +18,11 @@ The **Fashion Classifier** is a web-based application that uses AI to classify f
 
 4. **Reset Functionality:**
    - Enables users to reset the detection counter and clear logs directly from the interface.
+
+5. **Duplicate Detection Prevention:**
+   - Ensures the detection counter only updates when a new item is classified.
+   - Prevents the counter from increasing for the same item shown repeatedly.
+
   
    ![Image](https://github.com/user-attachments/assets/7ac37df4-8696-4bf0-8878-b06e9aeaf271)
 
@@ -33,7 +38,8 @@ The **Fashion Classifier** is a web-based application that uses AI to classify f
 
 2. **Classification Process:**
    - Predicts the item type based on the model's training (e.g., Dress, T-Shirt).
-   - Updates the detection counter and stores the log in Firebase.
+   - Updates the detection counter and logs only if the new classification is different from the last one.
+   - Uses a comparison mechanism (`lastClassified`) to avoid duplicate detections.
 
 3. **Real-Time Updates:**
    - Counter and logs are synchronized with Firebase, ensuring real-time data visibility.
