@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fashion Classifier</title>
+    <!-- Load TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <!-- Load Teachable Machine Library -->
+    <script src="./teachablemachine-image.min.js"></script>
+    <!-- Load Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+    <style>
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            text-align: center;
+            background: linear-gradient(to bottom right, #ffe6f0, #fff5e6);
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background: linear-gradient(to right, #ffafbd, #ffc3a0);
+            color: white;
+            padding: 1.5rem;
+            font-size: 2.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        }
+        video {
+            margin-top: 20px;
+            border: 4px solid #ffc3a0;
+            border-radius: 12px;
+            width: 400px;
+            height: 300px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.8rem;
+            color: #ff6f91;
+            font-weight: bold;
+        }
+        .counter {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #555;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 20px;
+            text-align: left;
+            background: #fff5e6;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .refresh-btn {
+            margin-top: 30px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            color: white;
+            background: #ffafbd;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Fashion Classifier</div>
+    <video id="camera" autoplay playsinline></video>
+    <div class="result" id="result">Result will appear here</div>
+    <div class="counter" id="counter">Total Detections: 0</div>
+    <button class="refresh-btn" onclick="resetCounter()">Reset Counter</button>
+    <div class="log" id="log"></div>
+
+    <script>
+        // إعداد Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCf6oDCXEW3gzzFwP9u7NAJfiAUZmdyLTM",
+            authDomain: "fashion-classifier-83349.firebaseapp.com",
+            databaseURL: "https://fashion-classifier-83349-default-rtdb.firebaseio.com",
+            projectId: "fashion-classifier-83349",
+            storageBucket: "fashion-classifier-83349.firebasestorage.app",
+            messagingSenderId: "975350753973",
+            appId: "1:975350753973:web:f2585623435c84080bacfc",
+            measurementId: "G-Y7B6H66WEJ"
+        };
+    
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const counterRef = database.ref('detections/counter');
+        const logRef = database.ref('detections/log');
+    
+        // متغير لحفظ آخر نتيجة مصنفة
+        let lastClassified = "";
+    
+        // تحديث العداد في قاعدة البيانات
+        async function updateCounter() {
+            counterRef.transaction(currentValue => (currentValue || 0) + 1);
+        }
+    
+        // تصفير العداد
+        async function resetCounter() {
+            counterRef.set(0);
+            logRef.set(null); // حذف السجل
+        }
+    
+        // عرض العداد على الصفحة
+        counterRef.on('value', (snapshot) => {
+            const counter = snapshot.val() || 0;
+            document.getElementById('counter').innerText = `Total Detections: ${counter}`;
+        });
+    
+        // عرض السجل على الصفحة
+        logRef.on('child_added', (snapshot) => {
+            const logItem = snapshot.val();
+            const logDiv = document.createElement('div');
+            logDiv.textContent = `${logItem.time} - ${logItem.className}`;
+            document.getElementById('log').appendChild(logDiv);
+        });
+    
+        // تسجيل التصنيفات في السجل
+        async function logPrediction(className) {
+            const time = new Date().toLocaleString();
+            logRef.push({ className, time });
+        }
+    
+        // تحميل النموذج
+        async function loadModel() {
+            const modelURL = "https://teachablemachine.withgoogle.com/models/eKbvgS_uJ/model.json";
+            const metadataURL = "https://teachablemachine.withgoogle.com/models/eKbvgS_uJ/metadata.json";
+    
+            const model = await tmImage.load(modelURL, metadataURL);
+            console.log("Model loaded!");
+            return model;
+        }
+    
+        // تشغيل الكاميرا
+        async function setupCamera() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            document.getElementById('camera').srcObject = stream;
+        }
+    
+        // بدء التصنيف
+        async function startClassification() {
+            const model = await loadModel();
+            setInterval(async () => {
+                const predictions = await model.predict(document.getElementById('camera'));
+                const bestPrediction = predictions.reduce((prev, current) => 
+                    prev.probability > current.probability ? prev : current
+                );
+    
+                // إذا كانت النتيجة الحالية مختلفة عن النتيجة السابقة
+                if (bestPrediction.className !== lastClassified) {
+                    lastClassified = bestPrediction.className; // تحديث النتيجة الأخيرة
+                    document.getElementById('result').innerText = `This is: ${bestPrediction.className}`;
+                    await updateCounter(); // تحديث العداد في قاعدة البيانات
+                    await logPrediction(bestPrediction.className); // تسجيل النتيجة في السجل
+                }
+            }, 1000); // التصنيف كل ثانية
+        }
+    
+        // التهيئة
+        async function init() {
+            await setupCamera();
+            startClassification();
+        }
+    
+        init();
+    </script>
