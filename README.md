@@ -21,6 +21,8 @@ The **Fashion Classifier** is a web-based application that uses AI to classify f
   
    ![Image](https://github.com/user-attachments/assets/7ac37df4-8696-4bf0-8878-b06e9aeaf271)
 
+   ![Image](https://github.com/user-attachments/assets/be339ad8-fc86-46bf-9555-84a4bcac477c)
+
 ---
 
 ## How It Works
