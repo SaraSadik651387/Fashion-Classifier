@@ -18,6 +18,8 @@ The **Fashion Classifier** is a web-based application that uses AI to classify f
 
 4. **Reset Functionality:**
    - Enables users to reset the detection counter and clear logs directly from the interface.
+  
+   ![Image](https://github.com/user-attachments/assets/7ac37df4-8696-4bf0-8878-b06e9aeaf271)
 
 ---
 
