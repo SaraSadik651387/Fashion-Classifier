@@ -60,7 +60,7 @@ The **Fashion Classifier** is a web-based application that uses AI to classify f
 1. **Download or Clone the Project:**
    - Download the ZIP file or use the command:
      ```bash
-     git clone https://github.com/your-username/fashion-classifier.git
+     git clone https://github.com/SaraSadik651387/Fashion-Classifier.git
      ```
 
 2. **Open the Project in Your Editor:**
